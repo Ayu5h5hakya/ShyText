@@ -1,9 +1,11 @@
 package com.example.shytext
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,6 +39,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     ShyText(
                         text = sampletext,
+                        moreText = "...See More",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -46,21 +49,24 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ShyText(text: String, modifier: Modifier = Modifier) {
+fun ShyText(text: String, moreText: String = "...", modifier: Modifier = Modifier) {
+    BoxWithConstraints {
     val textMeasurer = rememberTextMeasurer()
+    val measuredText =
+        textMeasurer.measure(
+            AnnotatedString(text),
+            overflow = TextOverflow.Ellipsis,
+            constraints = Constraints.fixed(constraints.maxWidth, constraints.maxHeight),
+            style = TextStyle(fontSize = 18.sp)
+        )
     Spacer(
         modifier = Modifier
             .height(100.dp)
             .fillMaxWidth()
             .drawBehind {
-                val measuredText =
-                    textMeasurer.measure(
-                        AnnotatedString(text),
-                        overflow = TextOverflow.Ellipsis,
-                        constraints = Constraints.fixed(size.width.toInt(), size.height.toInt()),
-                        style = TextStyle(fontSize = 18.sp)
-                    )
+
                 drawText(measuredText)
             }
     )
+    }
 }
