@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,10 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
@@ -67,6 +72,7 @@ fun ShyText(
 ) {
     BoxWithConstraints {
         val textMeasurer = rememberTextMeasurer()
+        var isHidden by remember { mutableStateOf(true) }
         val measuredText =
             textMeasurer.measure(
                 AnnotatedString(text),
@@ -77,18 +83,24 @@ fun ShyText(
 
         Canvas(
             modifier
-                .height((measuredText.firstBaseline * visibleLines).dp)
+                .height(if (isHidden) (measuredText.firstBaseline * visibleLines).dp else measuredText.lastBaseline.dp)
                 .fillMaxWidth()
+                .clickable {
+                    isHidden = !isHidden
+                }
         ) {
 
-            val endOffset = measuredText.getLineEnd(visibleLines - 1, true)+1
+            val endOffset = measuredText.getLineEnd(visibleLines - 1, true) + 1
             val endBoundingBox = measuredText.getCursorRect(endOffset - moreText.length)
             drawText(
                 textMeasurer,
-                text.substring(0, measuredText.getLineStart(visibleLines) - moreText.length),
+                if (isHidden) text.substring(
+                    0,
+                    measuredText.getLineStart(visibleLines) - moreText.length
+                ) else text,
                 style = TextStyle(fontSize = 18.sp)
             )
-            drawText(
+            if (isHidden) drawText(
                 textMeasurer,
                 moreText,
                 topLeft = Offset(endBoundingBox.left, endBoundingBox.top),
