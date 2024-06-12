@@ -81,31 +81,35 @@ fun ShyText(
                 style = TextStyle(fontSize = 18.sp)
             )
 
-        Canvas(
-            modifier
-                .height(if (isHidden) (measuredText.firstBaseline * visibleLines).dp else measuredText.lastBaseline.dp)
-                .fillMaxWidth()
-                .clickable {
-                    isHidden = !isHidden
-                }
-        ) {
+        if (measuredText.lineCount <= visibleLines) {
+            Text(text, style = TextStyle(fontSize = 18.sp))
+        } else {
+            Canvas(
+                modifier
+                    .height(if (isHidden) (measuredText.firstBaseline * visibleLines).dp else measuredText.lastBaseline.dp)
+                    .fillMaxWidth()
+                    .clickable {
+                        isHidden = !isHidden
+                    }
+            ) {
 
-            val endOffset = measuredText.getLineEnd(visibleLines - 1, true) + 1
-            val endBoundingBox = measuredText.getCursorRect(endOffset - moreText.length)
-            drawText(
-                textMeasurer,
-                if (isHidden) text.substring(
-                    0,
-                    measuredText.getLineStart(visibleLines) - moreText.length
-                ) else text,
-                style = TextStyle(fontSize = 18.sp)
-            )
-            if (isHidden) drawText(
-                textMeasurer,
-                moreText,
-                topLeft = Offset(endBoundingBox.left, endBoundingBox.top),
-                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            )
+                val endOffset = measuredText.getLineEnd(visibleLines - 1, true) + 1
+                val endBoundingBox = measuredText.getCursorRect(endOffset - moreText.length)
+                drawText(
+                    textMeasurer,
+                    if (isHidden) text.substring(
+                        0,
+                        measuredText.getLineStart(visibleLines) - moreText.length
+                    ) else text,
+                    style = TextStyle(fontSize = 18.sp)
+                )
+                if (isHidden) drawText(
+                    textMeasurer,
+                    moreText,
+                    topLeft = Offset(endBoundingBox.left, endBoundingBox.top),
+                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                )
+            }
         }
     }
 }
