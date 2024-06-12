@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -73,6 +75,7 @@ fun ShyText(
     BoxWithConstraints {
         val textMeasurer = rememberTextMeasurer()
         var isHidden by remember { mutableStateOf(true) }
+
         val measuredText =
             textMeasurer.measure(
                 AnnotatedString(text),
@@ -81,12 +84,17 @@ fun ShyText(
                 style = TextStyle(fontSize = 18.sp)
             )
 
+        val transition = updateTransition(isHidden)
+        val height by transition.animateDp { hidden ->
+            if (hidden) (measuredText.firstBaseline * visibleLines).dp else measuredText.lastBaseline.dp
+        }
+
         if (measuredText.lineCount <= visibleLines) {
             Text(text, style = TextStyle(fontSize = 18.sp))
         } else {
             Canvas(
                 modifier
-                    .height(if (isHidden) (measuredText.firstBaseline * visibleLines).dp else measuredText.lastBaseline.dp)
+                    .height(height)
                     .fillMaxWidth()
                     .clickable {
                         isHidden = !isHidden
