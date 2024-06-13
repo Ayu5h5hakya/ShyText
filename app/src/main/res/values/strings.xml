@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ShyText</string>
+    <string name="sample_text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque mattis, quam consequat semper euismod, purus diam euismod dolor, sed efficitur dui eros eget mauris. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nunc semper semper dictum. Vivamus egestas eu risus ac pulvinar. Vivamus nulla mauris, posuere in vestibulum sed, sagittis a leo. Vestibulum sit amet elementum dui. Cras elit risus, accumsan sed urna a, aliquet hendrerit lectus. Aenean consectetur risus eros, at egestas massa posuere ac. Donec suscipit leo ullamcorper fringilla tempus.</string>
 </resources>

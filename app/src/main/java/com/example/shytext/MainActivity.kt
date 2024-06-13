@@ -10,6 +10,7 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +34,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -49,19 +52,19 @@ import com.example.shytext.ui.theme.ShyTextTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val sampletext =
-            "longTextSample asdasdas asdasd asdasdas dasd asd asd asdasd asd as adasd asd redacted ada sd asdasd asd  asdas d asda sd as  asdasdasd asdas asd asdasda asdasd asdsadasdasdasda sdfsdfs dsdfs dfsd fsdfdd sdfsdfs dfsdfergdbddcbff tbfgnjkyuk ykyukhjk,uiluifhf g edrgdfgdrtgr ttrthgfbhfghrtyfhbfg rt hrthfg ffff   fghfghrtyrthfgn s"
-
         enableEdgeToEdge()
         setContent {
             ShyTextTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(Modifier.padding(innerPadding)) {
-                        ShyText(
-                            text = sampletext,
-                            visibleLines = 3
-                        )
-                        Text("text")
+                    Box(Modifier.padding(innerPadding)) {
+                        Card {
+                            ShyText(
+                                text = stringResource(R.string.sample_text),
+                                moreText = "...Read More",
+                                visibleLines = 3,
+                                modifier = Modifier.padding(4.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -123,13 +126,13 @@ fun ShyText(
                     }
             ) {
 
-                val endOffset = measuredText.getLineEnd(visibleLines - 1, true) + 1
+                val endOffset = measuredText.getLineEnd(visibleLines - 1, true)
                 val endBoundingBox = measuredText.getCursorRect(endOffset - moreText.length)
                 drawText(
                     textMeasurer,
                     if (isHidden) text.substring(
                         0,
-                        measuredText.getLineStart(visibleLines) - moreText.length
+                        measuredText.getLineStart(visibleLines) - moreText.length-1
                     ) else text,
                     style = TextStyle(fontSize = 18.sp)
                 )
