@@ -11,6 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,12 +31,14 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
@@ -53,12 +56,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             ShyTextTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ShyText(
-                        text = sampletext,
-                        moreText = "...See More",
-                        visibleLines = 3,
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    Column(Modifier.padding(innerPadding)) {
+                        ShyText(
+                            text = sampletext,
+                            visibleLines = 3
+                        )
+                        Text("text")
+                    }
                 }
             }
         }
@@ -72,7 +76,7 @@ fun ShyText(
     visibleLines: Int,
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints {
+    BoxWithConstraints(modifier) {
         val textMeasurer = rememberTextMeasurer()
         var isHidden by remember { mutableStateOf(true) }
 
@@ -80,18 +84,36 @@ fun ShyText(
             textMeasurer.measure(
                 AnnotatedString(text),
                 overflow = TextOverflow.Ellipsis,
-                constraints = Constraints.fixed(constraints.maxWidth, constraints.maxHeight),
-                style = TextStyle(fontSize = 18.sp)
+                constraints = Constraints.fixedWidth(constraints.maxWidth),
+                style = TextStyle(
+                    fontSize = 18.sp,
+                )
             )
-
-        val transition = updateTransition(isHidden)
-        val height by transition.animateDp { hidden ->
-            if (hidden) (measuredText.firstBaseline * visibleLines).dp else measuredText.lastBaseline.dp
-        }
 
         if (measuredText.lineCount <= visibleLines) {
             Text(text, style = TextStyle(fontSize = 18.sp))
         } else {
+
+            val hiddenMeasurement =
+                textMeasurer.measure(
+                    AnnotatedString(text),
+                    overflow = TextOverflow.Ellipsis,
+                    constraints = Constraints.fixedWidth(constraints.maxWidth),
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                    ),
+                    maxLines = visibleLines
+                )
+
+            val transition = updateTransition(isHidden, label = "heightTransition")
+            val height by transition.animateDp(label = "animatedHeight") { hidden ->
+                if(hidden) {
+                    with(LocalDensity.current){hiddenMeasurement.size.height.toDp()}
+                } else {
+                    with(LocalDensity.current){measuredText.size.height.toDp()}
+                }
+            }
+
             Canvas(
                 modifier
                     .height(height)
