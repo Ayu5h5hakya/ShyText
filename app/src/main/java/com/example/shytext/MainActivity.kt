@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -62,6 +63,7 @@ class MainActivity : ComponentActivity() {
                                 text = stringResource(R.string.sample_text),
                                 moreText = "...Read More",
                                 visibleLines = 3,
+                                duration = 5000,
                                 modifier = Modifier.padding(4.dp)
                             )
                         }
@@ -77,6 +79,8 @@ fun ShyText(
     text: String,
     moreText: String = "...",
     visibleLines: Int,
+    duration: Int = 0,
+    redactedList: List<String> = listOf(),
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier) {
@@ -107,23 +111,36 @@ fun ShyText(
                     ),
                     maxLines = visibleLines
                 )
-
-            val transition = updateTransition(isHidden, label = "heightTransition")
-            val height by transition.animateDp(label = "animatedHeight") { hidden ->
-                if(hidden) {
-                    with(LocalDensity.current){hiddenMeasurement.size.height.toDp()}
-                } else {
-                    with(LocalDensity.current){measuredText.size.height.toDp()}
+            var canvasModifier: Modifier = modifier
+                .height(if (isHidden) with(LocalDensity.current) { hiddenMeasurement.size.height.toDp() } else with(
+                    LocalDensity.current
+                ) { measuredText.size.height.toDp() })
+                .fillMaxWidth()
+                .clickable {
+                    isHidden = !isHidden
                 }
-            }
-
-            Canvas(
-                modifier
+            if (duration != 0) {
+                val transition = updateTransition(isHidden, label = "heightTransition")
+                val height by transition.animateDp(
+                    label = "animatedHeight",
+                    transitionSpec = { tween(durationMillis = duration) }
+                ) { hidden ->
+                    if (hidden) {
+                        with(LocalDensity.current) { hiddenMeasurement.size.height.toDp() }
+                    } else {
+                        with(LocalDensity.current) { measuredText.size.height.toDp() }
+                    }
+                }
+                canvasModifier = modifier
                     .height(height)
                     .fillMaxWidth()
                     .clickable {
                         isHidden = !isHidden
                     }
+            }
+
+            Canvas(
+                canvasModifier
             ) {
 
                 val endOffset = measuredText.getLineEnd(visibleLines - 1, true)
@@ -132,7 +149,7 @@ fun ShyText(
                     textMeasurer,
                     if (isHidden) text.substring(
                         0,
-                        measuredText.getLineStart(visibleLines) - moreText.length-1
+                        measuredText.getLineStart(visibleLines) - moreText.length - 1
                     ) else text,
                     style = TextStyle(fontSize = 18.sp)
                 )
@@ -142,6 +159,8 @@ fun ShyText(
                     topLeft = Offset(endBoundingBox.left, endBoundingBox.top),
                     style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 )
+
+
             }
         }
     }
