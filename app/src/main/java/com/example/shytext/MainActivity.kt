@@ -24,6 +24,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,12 +33,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -63,7 +66,8 @@ class MainActivity : ComponentActivity() {
                                 text = stringResource(R.string.sample_text),
                                 moreText = "...Read More",
                                 visibleLines = 3,
-                                duration = 5000,
+                                duration = 500,
+                                redactedList = listOf("Lorem", "sit", "mattis"),
                                 modifier = Modifier.padding(4.dp)
                             )
                         }
@@ -160,8 +164,37 @@ fun ShyText(
                     style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 )
 
-
+                if (redactedList.isNotEmpty()) {
+                    val boundingBoxes = measuredText.getBoundingBoxList(text, redactedList)
+                    if (boundingBoxes.isNotEmpty()) {
+                        boundingBoxes.map {
+                            drawRect(
+                                color = Color.Black,
+                                topLeft = it.topLeft,
+                                size = Size(it.width, it.height)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+@Stable
+fun TextLayoutResult.getBoundingBoxList(input: String, list: List<String>): List<Rect> {
+    var indexList = mutableListOf<Int>()
+    val result = mutableListOf<Rect>()
+    for (text in list) {
+        indexList.add(input.indexOf(text))
+        indexList.add(input.indexOf(text[text.length-1], startIndex = input.indexOf(text)))
+    }
+    if (indexList.size % 2 == 0) {
+        for (i in 0..<indexList.size step 2) {
+            val start = getCursorRect(indexList[i])
+            val end = getCursorRect(indexList[i + 1]+1)
+            result.add(Rect(topLeft = start.topLeft, bottomRight = end.bottomRight))
+        }
+    }
+    return result
 }
