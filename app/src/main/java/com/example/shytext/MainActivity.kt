@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
@@ -94,6 +95,7 @@ fun ShyText(
     BoxWithConstraints(modifier) {
         val textMeasurer = rememberTextMeasurer()
         var isHidden by remember { mutableStateOf(true) }
+        var isCollapsed by remember { mutableStateOf(true) }
 
         val measuredText =
             textMeasurer.measure(
@@ -125,25 +127,25 @@ fun ShyText(
                 ) { measuredText.size.height.toDp() })
                 .fillMaxWidth()
                 .clickable {
-                    isHidden = !isHidden
+                    isCollapsed = !isCollapsed
                 }
             if (duration != 0) {
-                val transition = updateTransition(isHidden, label = "heightTransition")
-                val height by transition.animateDp(
-                    label = "animatedHeight",
-                    transitionSpec = { tween(durationMillis = duration) }
-                ) { hidden ->
-                    if (hidden) {
+                val height by animateDpAsState(
+                    if (isCollapsed) {
                         with(LocalDensity.current) { hiddenMeasurement.size.height.toDp() }
                     } else {
                         with(LocalDensity.current) { measuredText.size.height.toDp() }
+                    },
+                    label = "heightChange", animationSpec = tween(duration),
+                    finishedListener = {
+                        isHidden = !isHidden
                     }
-                }
+                )
                 canvasModifier = modifier
                     .height(height)
                     .fillMaxWidth()
                     .clickable {
-                        isHidden = !isHidden
+                        isCollapsed = !isCollapsed
                     }
             }
 
@@ -153,20 +155,24 @@ fun ShyText(
 
                 val endOffset = measuredText.getLineEnd(visibleLines - 1, true)
                 val endBoundingBox = measuredText.getCursorRect(endOffset - moreText.length)
-                drawText(
-                    textMeasurer,
-                    if (isHidden) text.substring(
-                        0,
-                        measuredText.getLineStart(visibleLines) - moreText.length - 1
-                    ) else text,
-                    style = TextStyle(fontSize = 18.sp)
-                )
-                if (isHidden) drawText(
-                    textMeasurer,
-                    moreText,
-                    topLeft = Offset(endBoundingBox.left, endBoundingBox.top),
-                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                )
+                if (!isCollapsed) {
+                    drawText(textMeasurer, text, style = TextStyle(fontSize = 18.sp))
+                } else {
+                    drawText(
+                        textMeasurer,
+                        if (isHidden) text.substring(
+                            0,
+                            measuredText.getLineStart(visibleLines) - moreText.length - 1
+                        ) else text,
+                        style = TextStyle(fontSize = 18.sp)
+                    )
+                    if (isHidden) drawText(
+                        textMeasurer,
+                        moreText,
+                        topLeft = Offset(endBoundingBox.left, endBoundingBox.top),
+                        style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    )
+                }
 
                 if (redactedList.isNotEmpty()) {
                     val boundingBoxes = measuredText.getBoundingBoxList(text, redactedList)
@@ -193,12 +199,12 @@ fun TextLayoutResult.getBoundingBoxList(input: String, list: List<String>): List
     val result = mutableListOf<Rect>()
     for (text in list) {
         indexList.add(input.indexOf(text))
-        indexList.add(input.indexOf(text[text.length-1], startIndex = input.indexOf(text)))
+        indexList.add(input.indexOf(text[text.length - 1], startIndex = input.indexOf(text)))
     }
     if (indexList.size % 2 == 0) {
         for (i in 0..<indexList.size step 2) {
             val start = getCursorRect(indexList[i])
-            val end = getCursorRect(indexList[i + 1]+1)
+            val end = getCursorRect(indexList[i + 1] + 1)
             result.add(Rect(topLeft = start.topLeft, bottomRight = end.bottomRight))
         }
     }
