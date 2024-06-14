@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.shytext.ui.theme.ShyTextTheme
@@ -68,6 +70,7 @@ class MainActivity : ComponentActivity() {
                                 visibleLines = 3,
                                 duration = 500,
                                 redactedList = listOf("Lorem", "sit", "mattis"),
+                                redactCornerRadius = 4.dp,
                                 modifier = Modifier.padding(4.dp)
                             )
                         }
@@ -85,6 +88,7 @@ fun ShyText(
     visibleLines: Int,
     duration: Int = 0,
     redactedList: List<String> = listOf(),
+    redactCornerRadius: Dp = 0.dp,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier) {
@@ -168,10 +172,12 @@ fun ShyText(
                     val boundingBoxes = measuredText.getBoundingBoxList(text, redactedList)
                     if (boundingBoxes.isNotEmpty()) {
                         boundingBoxes.map {
-                            drawRect(
+                            drawRoundRect(
                                 color = Color.Black,
                                 topLeft = it.topLeft,
-                                size = Size(it.width, it.height)
+                                size = Size(it.width, it.height),
+                                cornerRadius = CornerRadius(redactCornerRadius.toPx())
+
                             )
                         }
                     }
